@@ -6,7 +6,7 @@
         <input type="radio" v-model="useOwnData" value="true" /> Use my own data
       </label>
       <label>
-        <input type="radio" v-model="useOwnData" value="false" @change="emitDefaultDatasetSelected" /> Use default dataset
+        <input type="radio" v-model="useOwnData" value="false" /> Use default dataset
       </label>
     </div>
 
@@ -14,6 +14,8 @@
       <input type="file" @change="handleFileUpload" />
       <p v-if="error" style="color: red;">{{ error }}</p>
     </div>
+
+    <button :disabled="!canProceed" @click="submitData">Next</button>
   </div>
 </template>
 
@@ -25,19 +27,7 @@ export default {
     const useOwnData = ref('false');
     const fileData = ref(null);
     const error = ref('');
-
-    const emitDefaultDatasetSelected = () => {
-      if (useOwnData.value === 'false') {
-        const defaultDataset = {
-          // Example of default dataset
-          "home_screen_button_explore": "Explore Now",
-          "home_screen_button_learn_more": "Learn More",
-          "settings_button_save": "Save Changes",
-          "settings_button_cancel": "Cancel",
-        };
-        emit('datasetSelected', { data: defaultDataset, characters: extractUniqueCharacters(defaultDataset) });
-      }
-    };
+    const canProceed = ref(false); // Initially disabled
 
     const handleFileUpload = (event) => {
       const file = event.target.files[0];
@@ -46,34 +36,41 @@ export default {
         reader.onload = (e) => {
           try {
             const data = JSON.parse(e.target.result);
-            const characters = extractUniqueCharacters(data);
-            fileData.value = { data, characters };
-            error.value = '';
-            emit('datasetSelected', fileData.value); // Emit the data and characters
+            console.log("Uploaded data:", data); // For debugging
+            fileData.value = data; // Store file data
+            error.value = ''; // Clear error
+            canProceed.value = true; // Enable next button
           } catch (e) {
             error.value = 'Invalid JSON file. Please upload a valid JSON file.';
-            fileData.value = null;
+            fileData.value = null; // Reset on error
+            canProceed.value = false; // Disable next button
           }
         };
         reader.readAsText(file);
       } else {
         error.value = 'Please upload a valid JSON file.';
-        fileData.value = null;
+        fileData.value = null; // Reset on error
+        canProceed.value = false; // Disable next button
       }
     };
 
-    const extractUniqueCharacters = (data) => {
-      const allText = Object.values(data).join('');
-      const uniqueChars = new Set(allText.match(/[a-zA-Z]/g));
-      return Array.from(uniqueChars);
+    const submitData = () => {
+      if (fileData.value || useOwnData.value === 'false') {
+        emit('datasetSelected', fileData.value || { /* Default dataset */ }); // Replace with your default dataset
+      }
     };
 
     return {
       useOwnData,
       handleFileUpload,
-      emitDefaultDatasetSelected,
       error,
+      canProceed,
+      submitData,
     };
   },
 };
 </script>
+
+<style scoped>
+/* Add any styles needed for StepOne here */
+</style>
