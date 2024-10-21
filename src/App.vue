@@ -1,26 +1,62 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div id="app">
+    <h1>Text Expansion Calculator</h1>
+    <component :is="currentStepComponent"></component>
+    <button @click="prevStep" v-if="step > 1">Back</button>
+    <button @click="nextStep" v-if="step < totalSteps">Next</button>
+    <button @click="submit" v-if="step === totalSteps">Submit</button>
+  </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import { ref, computed } from 'vue';
+import Step1 from './components/Step1.vue';
+import Step2 from './components/Step2.vue';
+import Step3 from './components/Step3.vue';
+import Step4 from './components/Step4.vue';
+import Step5 from './components/Step5.vue';
 
 export default {
-  name: 'App',
+  setup() {
+    const step = ref(1);
+    const totalSteps = 5;
+
+    const currentStepComponent = computed(() => `Step${step.value}`);
+
+    const nextStep = () => {
+      if (step.value < totalSteps) step.value++;
+    };
+
+    const prevStep = () => {
+      if (step.value > 1) step.value--;
+    };
+
+    const submit = () => {
+      console.log('Submitting data');
+      // Handle the final submission logic
+    };
+
+    return {
+      step,
+      currentStepComponent,
+      nextStep,
+      prevStep,
+      submit
+    };
+  },
   components: {
-    HelloWorld
+    Step1,
+    Step2,
+    Step3,
+    Step4,
+    Step5
   }
-}
+};
 </script>
 
 <style>
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+  margin: 50px;
 }
 </style>
