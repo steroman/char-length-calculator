@@ -1,78 +1,73 @@
 <template>
   <div>
-    <h2>Select Dataset</h2>
+    <h2>Step 1: Select Your Dataset</h2>
+
+    <!-- Radio buttons for choosing dataset -->
     <div>
       <label>
-        <input type="radio" v-model="useOwnData" value="true" /> Use my own data
+        <input type="radio" value="default" v-model="datasetChoice" @change="updateCanProceed" />
+        Use default dataset
       </label>
       <label>
-        <input type="radio" v-model="useOwnData" value="false" /> Use default dataset
+        <input type="radio" value="upload" v-model="datasetChoice" @change="updateCanProceed" />
+        Upload your JSON file
       </label>
     </div>
 
-    <div v-if="useOwnData === 'true'">
+    <!-- File input appears only when user chooses to upload their dataset -->
+    <div v-if="datasetChoice === 'upload'">
       <input type="file" @change="handleFileUpload" />
-      <p v-if="error" style="color: red;">{{ error }}</p>
     </div>
-
-    <button :disabled="!canProceed" @click="submitData">Next</button>
   </div>
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, computed } from 'vue'; // Import computed here
 
 export default {
   setup(props, { emit }) {
-    const useOwnData = ref('false');
-    const fileData = ref(null);
-    const error = ref('');
-    const canProceed = ref(false);
+    const datasetChoice = ref('default'); // Default to using the default dataset
+    const isFileUploaded = ref(false);
+
+    // Emit event to parent to notify about the canProceed state
+    const updateCanProceed = () => {
+      emit('canProceed', canProceed.value);
+    };
+
+    // Check if the user can proceed
+    const canProceed = computed(() => {
+      return datasetChoice.value === 'default' || isFileUploaded.value;
+    });
 
     const handleFileUpload = (event) => {
       const file = event.target.files[0];
-      if (file && file.type === 'application/json') {
+      if (file && file.type === "application/json") {
         const reader = new FileReader();
         reader.onload = (e) => {
           try {
-            const data = JSON.parse(e.target.result);
-            console.log("Uploaded data:", data); // For debugging
-            fileData.value = data; // Store file data
-            error.value = ''; // Clear error
-            canProceed.value = true; // Enable next button
-            emit('datasetSelected', data); // Emit data for Step Two
-          } catch (e) {
-            error.value = 'Invalid JSON file. Please upload a valid JSON file.';
-            fileData.value = null; // Reset on error
-            canProceed.value = false; // Disable next button
+            const jsonData = JSON.parse(e.target.result);
+            emit('datasetSelected', jsonData); // Emit the uploaded dataset
+            isFileUploaded.value = true;
+            updateCanProceed(); // Update parent about canProceed state
+          } catch (error) {
+            alert("Invalid JSON file. Please upload a valid JSON file.");
           }
         };
         reader.readAsText(file);
       } else {
-        error.value = 'Please upload a valid JSON file.';
-        fileData.value = null; // Reset on error
-        canProceed.value = false; // Disable next button
-      }
-    };
-
-    const submitData = () => {
-      // Proceed only if data is uploaded or default dataset is chosen
-      if (fileData.value || useOwnData.value === 'false') {
-        emit('datasetSelected', fileData.value || { /* Default dataset */ });
+        alert("Please upload a valid JSON file.");
       }
     };
 
     return {
-      useOwnData,
+      datasetChoice,
       handleFileUpload,
-      error,
-      canProceed,
-      submitData,
+      updateCanProceed,
     };
   },
 };
 </script>
 
 <style scoped>
-/* Add any styles needed for StepOne here */
+/* Add styles if needed */
 </style>

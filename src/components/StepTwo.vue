@@ -1,25 +1,25 @@
 <template>
   <div>
-    <h2>Clean Up Your Data</h2>
-    <div>
-      <p>Select the options to clean your data:</p>
-      <label>
-        <input type="checkbox" v-model="ignoreCapitalization" /> Ignore capitalization
-      </label>
-      <label>
-        <input type="checkbox" v-model="ignorePunctuation" /> Ignore punctuation
-      </label>
-      <label>
-        <input type="checkbox" v-model="ignoreNumbers" /> Ignore numbers
-      </label>
-    </div>
-
-    <button @click="processData">Next</button>
+    <h2>Step 2: Clean Data</h2>
+    <p>Choose options to clean your data:</p>
+    <label>
+      <input type="checkbox" v-model="ignoreCapitalization" />
+      Ignore Capitalization
+    </label>
+    <label>
+      <input type="checkbox" v-model="ignorePunctuation" />
+      Ignore Punctuation
+    </label>
+    <label>
+      <input type="checkbox" v-model="ignoreNumbers" />
+      Ignore Numbers
+    </label>
+    <!-- Remove the Next button from here -->
   </div>
 </template>
 
 <script>
-import { ref } from 'vue'; // Removed the watch import
+import { ref } from 'vue';
 
 export default {
   props: ['dataset'],
@@ -27,43 +27,23 @@ export default {
     const ignoreCapitalization = ref(true);
     const ignorePunctuation = ref(true);
     const ignoreNumbers = ref(true);
-    const processedData = ref({});
 
     const processData = () => {
-      const allText = Object.values(props.dataset).join(''); // Join all values into a single string
-      let cleanedText = allText;
+      let processedData = {};
 
-      // Ignore capitalization
-      if (ignoreCapitalization.value) {
-        cleanedText = cleanedText.toLowerCase();
+      for (const key in props.dataset) {
+        const value = props.dataset[key];
+        
+        const cleanedValue = value
+          .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '') // Remove punctuation
+          .replace(/\d+/g, '') // Remove numbers
+          .toLowerCase(); // Convert to lowercase
+
+        processedData[key] = cleanedValue;
       }
 
-      // Ignore punctuation
-      if (ignorePunctuation.value) {
-        // Remove punctuation using regex
-        cleanedText = cleanedText.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '');
-      }
-
-      // Ignore numbers
-      if (ignoreNumbers.value) {
-        cleanedText = cleanedText.replace(/\d+/g, ''); // This is already fine
-      }
-
-      // Count unique characters after cleanup
-      const characterCounts = {};
-      for (const char of cleanedText) {
-        if (char in characterCounts) {
-          characterCounts[char]++;
-        } else {
-          characterCounts[char] = 1;
-        }
-      }
-
-      console.log("Processed Character Counts:", characterCounts); // For debugging
-      processedData.value = characterCounts;
-
-      // Emit processed data to App.vue
-      emit('cleanedDataReady', processedData.value);
+      console.log("Processed Data:", processedData);
+      emit('cleanedDataReady', processedData);
     };
 
     return {
@@ -77,5 +57,5 @@ export default {
 </script>
 
 <style scoped>
-/* Add any styles needed for StepTwo here */
+/* Add styles if needed */
 </style>
