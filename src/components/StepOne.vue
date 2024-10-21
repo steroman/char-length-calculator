@@ -27,7 +27,7 @@ export default {
     const useOwnData = ref('false');
     const fileData = ref(null);
     const error = ref('');
-    const canProceed = ref(false); // Initially disabled
+    const canProceed = ref(false);
 
     const handleFileUpload = (event) => {
       const file = event.target.files[0];
@@ -40,6 +40,7 @@ export default {
             fileData.value = data; // Store file data
             error.value = ''; // Clear error
             canProceed.value = true; // Enable next button
+            emit('datasetSelected', data); // Emit data for Step Two
           } catch (e) {
             error.value = 'Invalid JSON file. Please upload a valid JSON file.';
             fileData.value = null; // Reset on error
@@ -55,8 +56,9 @@ export default {
     };
 
     const submitData = () => {
+      // Proceed only if data is uploaded or default dataset is chosen
       if (fileData.value || useOwnData.value === 'false') {
-        emit('datasetSelected', fileData.value || { /* Default dataset */ }); // Replace with your default dataset
+        emit('datasetSelected', fileData.value || { /* Default dataset */ });
       }
     };
 

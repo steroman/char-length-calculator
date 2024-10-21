@@ -1,34 +1,44 @@
 <template>
   <div id="app">
-    <h1>Text Expansion Calculator</h1>
-    <StepOne @datasetSelected="handleDatasetSelection" />
+    <StepOne v-if="currentStep === 1" @datasetSelected="goToStepTwo" />
+    <StepTwo v-if="currentStep === 2" :dataset="dataset" @cleanedDataReady="handleCleanedData" />
   </div>
 </template>
 
 <script>
-import StepOne from './components/StepOne.vue'; // Import StepOne component
+import { ref } from 'vue';
+import StepOne from './components/StepOne.vue';
+import StepTwo from './components/StepTwo.vue';
 
 export default {
   components: {
-    StepOne, // Register the StepOne component
+    StepOne,
+    StepTwo,
   },
   setup() {
-    // Event handler for dataset selection
-    const handleDatasetSelection = (data) => {
-      console.log("Dataset selected:", data);
-      // You can proceed to the next step or process the data further here.
+    const currentStep = ref(1);
+    const dataset = ref({});
+
+    const goToStepTwo = (data) => {
+      dataset.value = data; // Store the dataset received from StepOne
+      currentStep.value = 2; // Move to StepTwo
+    };
+
+    const handleCleanedData = (cleanedData) => {
+      console.log("Cleaned data:", cleanedData); // For debugging
+      // You can add logic here to handle the cleaned data for the next steps
     };
 
     return {
-      handleDatasetSelection,
+      currentStep,
+      dataset,
+      goToStepTwo,
+      handleCleanedData,
     };
   },
 };
 </script>
 
 <style>
-#app {
-  text-align: center;
-  margin: 50px;
-}
+/* Add any styles needed for App.vue here */
 </style>
