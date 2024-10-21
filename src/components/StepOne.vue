@@ -1,89 +1,77 @@
 <template>
   <div>
-    <h2>Step 1: Choose Your Dataset</h2>
+    <h2>Select Dataset</h2>
     <div>
       <label>
-        <input type="radio" value="own" v-model="datasetChoice" /> Use My Own Data
+        <input type="radio" v-model="useOwnData" value="true" /> Use my own data
       </label>
       <label>
-        <input type="radio" value="default" v-model="datasetChoice" /> Use Default Dataset
+        <input type="radio" v-model="useOwnData" value="false" /> Use default dataset
       </label>
     </div>
 
-    <div v-if="datasetChoice === 'own'">
-      <input type="text" v-model="mainLanguage" placeholder="Enter main language" />
-      <input type="file" @change="handleFileUpload" accept=".json" />
-      <div v-if="additionalLanguages.length > 0">
-        <button @click="addLanguage">Add Another Language</button>
-        <div v-for="(lang, index) in additionalLanguages" :key="index">
-          <input type="text" v-model="lang.name" placeholder="Enter additional language" />
-          <input type="file" @change="(e) => handleFileUpload(e, index)" accept=".json" />
-        </div>
-      </div>
-      <button @click="nextStep" :disabled="!isOwnDataValid">Next</button>
+    <div v-if="useOwnData === 'true'">
+      <input type="file" @change="handleFileUpload" />
+      <p v-if="error" style="color: red;">{{ error }}</p>
     </div>
 
-    <div v-if="datasetChoice === 'default'">
-      <p>Main Language: English</p>
-      <button @click="nextStep">Next</button>
-    </div>
+    <button :disabled="!canProceed" @click="submitData">Next</button>
   </div>
 </template>
 
-<script setup>
-import { ref, computed, defineEmits } from 'vue';
+<script>
+import { ref, watch } from 'vue';
 
-const emit = defineEmits(['datasetSelected']); // Define emitted events
+export default {
+  setup(props, { emit }) {
+    const useOwnData = ref('false');
+    const fileData = ref(null);
+    const error = ref('');
+    const canProceed = ref(false);
 
-const datasetChoice = ref(null);
-const mainLanguage = ref('');
-const additionalLanguages = ref([]);
-const jsonData = ref({}); // Store uploaded JSON data
+    // Watch for changes to fileData to enable/disable the Next button
+    watch(fileData, (newValue) => {
+      canProceed.value = !!newValue; // Enable Next button if fileData has content
+    });
 
-// Function to handle file upload
-const handleFileUpload = (event, index) => {
-  const file = event.target.files[0];
-  const reader = new FileReader();
-
-  reader.onload = (e) => {
-    try {
-      const parsedData = JSON.parse(e.target.result);
-      if (index !== undefined) {
-        additionalLanguages.value[index].data = parsedData; // Store secondary language data
+    const handleFileUpload = (event) => {
+      const file = event.target.files[0];
+      if (file && file.type === 'application/json') {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            fileData.value = JSON.parse(e.target.result);
+            error.value = ''; // Clear any previous errors
+          } catch (e) {
+            error.value = 'Invalid JSON file. Please upload a valid JSON file.';
+            fileData.value = null; // Reset fileData on error
+          }
+        };
+        reader.readAsText(file);
       } else {
-        jsonData.value.mainLanguageData = parsedData; // Store main language data
+        error.value = 'Please upload a valid JSON file.';
+        fileData.value = null; // Reset fileData on error
       }
-    } catch (err) {
-      console.error("Invalid JSON file!", err);
-    }
-  };
+    };
 
-  reader.readAsText(file);
-};
+    const submitData = () => {
+      if (fileData.value) {
+        emit('datasetSelected', fileData.value); // Emit the data back to App.vue
+      }
+    };
 
-// Add another language input
-const addLanguage = () => {
-  additionalLanguages.value.push({ name: '', data: null });
-};
-
-// Validate own data
-const isOwnDataValid = computed(() => {
-  return mainLanguage.value && jsonData.value.mainLanguageData && additionalLanguages.value.every(lang => lang.data);
-});
-
-// Next step logic
-const nextStep = () => {
-  const languagesData = {
-    main: {
-      name: mainLanguage.value,
-      data: jsonData.value.mainLanguageData,
-    },
-    additional: additionalLanguages.value,
-  };
-  emit('datasetSelected', languagesData); // Emit event
+    return {
+      useOwnData,
+      fileData,
+      handleFileUpload,
+      error,
+      canProceed,
+      submitData,
+    };
+  },
 };
 </script>
 
 <style scoped>
-/* Add your styles here */
+/* Add any styles needed for StepOne here */
 </style>
