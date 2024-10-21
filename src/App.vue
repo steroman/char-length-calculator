@@ -3,13 +3,15 @@
     <h1>Text Expansion Calculator</h1>
     <component 
       :is="currentStepComponent" 
-      @datasetSelected="handleDatasetSelection" 
-      @cleanupComplete="handleCleanupComplete" 
-      @buttonWidthSubmitted="handleButtonWidth" 
+      @datasetSelected="handleDatasetSelection"
+      @cleanupComplete="handleCleanupComplete"
+      @buttonWidthSubmitted="handleButtonWidth"
       @resultsCalculated="handleResultsCalculation">
     </component>
+
+    <!-- Step Navigation -->
     <button @click="prevStep" v-if="step > 1">Back</button>
-    <button @click="nextStep" v-if="step < totalSteps">Next</button>
+    <button @click="nextStep" :disabled="!canProceedToNextStep">Next</button>
   </div>
 </template>
 
@@ -29,51 +31,58 @@ export default {
     const buttonWidth = ref(null);
     const results = ref(null);
 
-    // Update to return actual component references
     const currentStepComponent = computed(() => {
       switch (step.value) {
-        case 1: return StepOne;
-        case 2: return StepTwo;
-        case 3: return StepThree;
-        case 4: return StepFour;
-        default: return StepOne; // Fallback to StepOne
+        case 1:
+          return StepOne;
+        case 2:
+          return StepTwo;
+        case 3:
+          return StepThree;
+        case 4:
+          return StepFour;
+        default:
+          return StepOne;
       }
     });
 
-    const nextStep = () => {
-      if (step.value < totalSteps) {
-        step.value++;
-        console.log(`Moving to Step: ${step.value}`);
+    const canProceedToNextStep = computed(() => {
+      switch (step.value) {
+        case 1:
+          return languagesData.value !== null; // Allow proceeding if data is selected (default or file)
+        case 2:
+          return cleanupData.value !== null;
+        case 3:
+          return buttonWidth.value !== null;
+        case 4:
+          return results.value !== null;
+        default:
+          return false;
       }
-    };
+    });
 
-    const prevStep = () => {
-      if (step.value > 1) {
-        step.value--;
-        console.log(`Moving to Step: ${step.value}`);
-      }
-    };
-
-    // Event handlers
     const handleDatasetSelection = (data) => {
-      languagesData.value = data;
-      nextStep();
+      languagesData.value = data; // Set the selected dataset
     };
 
     const handleCleanupComplete = (data) => {
       cleanupData.value = data;
-      nextStep();
     };
 
     const handleButtonWidth = (width) => {
       buttonWidth.value = width;
-      nextStep();
     };
 
     const handleResultsCalculation = (calculatedResults) => {
       results.value = calculatedResults;
-      // Display results in Step 4
-      nextStep();
+    };
+
+    const nextStep = () => {
+      if (step.value < totalSteps) step.value++;
+    };
+
+    const prevStep = () => {
+      if (step.value > 1) step.value--;
     };
 
     return {
@@ -81,21 +90,12 @@ export default {
       currentStepComponent,
       nextStep,
       prevStep,
+      canProceedToNextStep,
       handleDatasetSelection,
       handleCleanupComplete,
       handleButtonWidth,
       handleResultsCalculation,
-      languagesData,
-      cleanupData,
-      buttonWidth,
-      results,
     };
-  },
-  components: {
-    StepOne,
-    StepTwo,
-    StepThree,
-    StepFour,
   },
 };
 </script>
@@ -104,5 +104,9 @@ export default {
 #app {
   text-align: center;
   margin: 50px;
+}
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 </style>

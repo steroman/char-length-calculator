@@ -1,35 +1,28 @@
 <template>
   <div>
-    <h2>Step 4: Results</h2>
-    <p v-if="results">Results:</p>
-    <p v-else>No results available yet.</p>
-    <div v-if="results">
-      <p>Average Character Width (Main Language): {{ results.averageWidth }}</p>
-      <p v-for="(expansion, lang) in results.expansions" :key="lang">
-        Average Text Expansion for {{ lang }}: {{ expansion }}%
-      </p>
-      <p>Maximum Length: {{ results.maxLength }}</p>
-      <p>Adjusted Length: {{ results.adjustedLength }}</p>
+    <h2>Results</h2>
+    <div v-if="results && results.length">
+      <p>Results: {{ results }}</p>
     </div>
-    <button @click="finish">Finish</button>
+    <div v-else>
+      <p>No results calculated.</p>
+    </div>
   </div>
 </template>
 
-<script setup>
-import { ref, defineEmits } from 'vue';
+<!-- <script>
+export default {
+  setup(props) {
+    // If results is coming from props, you can access it like this:
+    // const { results } = props;
 
-const emit = defineEmits(['finished']); // Define emitted events
-
-const results = ref(null);
-
-// Listen to parent component for results
-// Since we're not using a specific function for handling results, you may want to emit results here directly.
-
-const finish = () => {
-  emit('finished'); // Emit event
+    return {
+      // If you don't need props, just return an empty object
+    };
+  },
 };
-</script>
+</script> -->
 
 <style scoped>
-/* Add your styles here */
+/* Add styles for StepFour here */
 </style>
