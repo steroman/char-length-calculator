@@ -10,18 +10,20 @@
 
 <script>
 import { ref, computed } from 'vue';
-import Step1 from './components/Step1.vue';
-import Step2 from './components/Step2.vue';
-import Step3 from './components/Step3.vue';
-import Step4 from './components/Step4.vue';
-import Step5 from './components/Step5.vue';
+import StepOne from './components/StepOne.vue';
+import StepTwo from './components/StepTwo.vue';
+import StepThree from './components/StepThree.vue';
+import StepFour from './components/StepFour.vue';
+import StepFive from './components/StepFive.vue';
 
 export default {
   setup() {
     const step = ref(1);
     const totalSteps = 5;
 
-    const currentStepComponent = computed(() => `Step${step.value}`);
+    const currentStepComponent = computed(() => {
+      return `Step${['One', 'Two', 'Three', 'Four', 'Five'][step.value - 1]}`;
+    });
 
     const nextStep = () => {
       if (step.value < totalSteps) step.value++;
@@ -45,11 +47,11 @@ export default {
     };
   },
   components: {
-    Step1,
-    Step2,
-    Step3,
-    Step4,
-    Step5
+    StepOne,
+    StepTwo,
+    StepThree,
+    StepFour,
+    StepFive
   }
 };
 </script>
