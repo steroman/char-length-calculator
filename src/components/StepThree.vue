@@ -1,26 +1,35 @@
 <template>
   <div>
     <h2>Step 3: Define Character Widths</h2>
-    <div v-for="(width, char) in characterWidths" :key="char">
-      <label>
-        {{ char }}: 
-        <input 
-          type="number" 
-          v-model.number="characterWidths[char]" 
-          min="0" 
-        />
-      </label>
+    <div v-if="!Object.keys(characterWidths).length">No characters available.</div>
+    <div v-else>
+      <div v-for="(width, char) in characterWidths" :key="char">
+        <label>
+          {{ char }}: 
+          <input 
+            type="number" 
+            v-model.number="characterWidths[char]" 
+            min="0" 
+          />
+        </label>
+      </div>
+      <button @click="submitWidths">Submit Widths</button>
     </div>
-    <!-- Remove the Next button from here -->
   </div>
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 export default {
-  props: ['cleanedData'],
+  props: {
+    cleanedData: {
+      type: Object,
+      required: true
+    }
+  },
   setup(props, { emit }) {
+    console.log("Received cleaned data:", props.cleanedData);
     const characterWidths = ref({});
 
     const initCharacterWidths = () => {
@@ -42,7 +51,12 @@ export default {
       console.log("Widths submitted:", characterWidths.value);
     };
 
-    initCharacterWidths();
+    // Watch for changes in cleanedData to initialize character widths
+    watch(() => props.cleanedData, (newData) => {
+      if (newData) {
+        initCharacterWidths(); // Initialize widths whenever cleanedData is updated
+      }
+    });
 
     return {
       characterWidths,

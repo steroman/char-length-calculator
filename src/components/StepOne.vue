@@ -22,11 +22,11 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'; // Import computed here
-
+import { ref, computed } from 'vue';
 export default {
   setup(props, { emit }) {
-    const datasetChoice = ref('default'); // Default to using the default dataset
+    // No dataset prop here, since it should not be needed in StepOne
+    const datasetChoice = ref('default');
     const isFileUploaded = ref(false);
 
     // Emit event to parent to notify about the canProceed state
