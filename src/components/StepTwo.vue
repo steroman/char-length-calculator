@@ -2,8 +2,6 @@
   <div>
     <h2>Step 2: Clean Data</h2>
     <p>Choose options to clean your data:</p>
-
-    <!-- Cleaning options -->
     <label>
       <input type="checkbox" v-model="ignoreCapitalization" />
       Ignore Capitalization
@@ -29,21 +27,27 @@ export default {
       required: true,
     }
   },
-
-  setup() {
+  
+  setup(props, { emit }) {
     const ignoreCapitalization = ref(true);
     const ignorePunctuation = ref(true);
     const ignoreNumbers = ref(true);
+
+    // Method to emit cleaning options back to the parent component
+    const emitCleaningOptions = () => {
+      emit('cleaningOptionsSelected', {
+        ignoreCapitalization: ignoreCapitalization.value,
+        ignorePunctuation: ignorePunctuation.value,
+        ignoreNumbers: ignoreNumbers.value,
+      });
+    };
 
     return {
       ignoreCapitalization,
       ignorePunctuation,
       ignoreNumbers,
+      emitCleaningOptions,
     };
   },
 };
 </script>
-
-<style scoped>
-/* Add styles if needed */
-</style>
