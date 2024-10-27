@@ -21,7 +21,7 @@
         reader.readAsText(file);
       },
       selectGeneric() {
-        this.$emit("localizationSelected", /* provide generic expansion data */, "generic");
+        this.$emit("localizationSelected", /* provide generic expansion data */ "generic");
       }
     }
   };
