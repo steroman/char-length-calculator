@@ -16,7 +16,7 @@
         reader.readAsText(file);
       },
       useGenericDataset() {
-        this.$emit("datasetSelected", /* load or reference generic dataset here */, true);
+        this.$emit("datasetSelected", /* load or reference generic dataset here */ true);
       }
     }
   };

@@ -9,21 +9,58 @@
 </template>
 
 <script>
+import DatasetInput from './components/DatasetInput.vue';
+import DataCleanup from './components/DataCleanup.vue';
+import CharacterWidthInput from './components/CharacterWidthInput.vue';
+import LocalizationOptions from './components/LocalizationOptions.vue';
+import CalculationResults from './components/CalculationResults.vue';
+
+// Import the data processing function
+import { cleanAndCountCharacters } from './utils/dataProcessing.js';
+
 export default {
-  data() {
-    return {
-      step: 1,
-      processedData: {},  // Results after cleanup and frequency processing
-      maxLength: null,
-      expandedMaxLength: null,
-      characterSummary: {},
-    };
+  components: {
+    DatasetInput,
+    DataCleanup,
+    CharacterWidthInput,
+    LocalizationOptions,
+    CalculationResults
   },
-  methods: {
-    handleDatasetSelection(data, isGeneric) { /* Process and move to next step */ },
-    handleCleanupOptions(options) { /* Process cleanup and move to next step */ },
-    handleWidths(widths) { /* Calculate Average Character Width, move to next step */ },
-    handleLocalization(data, type) { /* Process localization, calculate final lengths */ },
+  data() {
+  return {
+    step: 1,
+    dataset: null,
+    cleanupOptions: {},
+    processedData: {},
+    maxLength: null,
+    expandedMaxLength: null,
+    characterSummary: {},
+    isGeneric: null, // Add here for potential use later
+  };
+},
+methods: {
+  handleDatasetSelection(data, isGeneric) { 
+    this.dataset = data;
+    this.isGeneric = isGeneric; // Store in data
+    this.step = 2;
+  },
+    handleCleanupOptions(options) { 
+      this.cleanupOptions = options;
+      
+      // Process dataset with cleanup options and calculate character frequencies
+      this.processedData = cleanAndCountCharacters(this.dataset, this.cleanupOptions);
+      
+      // Move to CharacterWidthInput step with processed data
+      this.step = 3;
+    },
+    handleWidths(widths) { 
+      console.log("Widths submitted", widths);
+      this.step = 4;
+    },
+    handleLocalization(data, type) { 
+      console.log("Localization options selected", data, type);
+      this.step = 5;
+    }
   }
 };
 </script>
