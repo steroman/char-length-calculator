@@ -1,17 +1,25 @@
 <template>
     <div>
       <h2>Localization Options</h2>
-      <label><input type="radio" v-model="option" value="own" /> Use Own Dataset</label>
-      <label><input type="radio" v-model="option" value="generic" /> Use Generic Dataset</label>
-      <input v-if="option === 'own'" type="file" @change="handleFileUpload" accept=".json" />
-      <button v-if="option === 'generic'" @click="selectGeneric">Select Generic Expansion</button>
+      <label>
+        <input type="radio" v-model="includeLocalization" value="yes" /> Yes
+      </label>
+      <label>
+        <input type="radio" v-model="includeLocalization" value="no" /> No
+      </label>
+      <div v-if="includeLocalization === 'yes'">
+        <label><input type="radio" v-model="option" value="own" /> Use Own Dataset</label>
+        <label><input type="radio" v-model="option" value="generic" /> Use Generic Dataset</label>
+        <input v-if="option === 'own'" type="file" @change="handleFileUpload" accept=".json" />
+        <button v-if="option === 'generic'" @click="selectGeneric">Select Generic Expansion</button>
+      </div>
     </div>
   </template>
   
   <script>
   export default {
     data() {
-      return { option: null };
+      return { includeLocalization: null, option: null };
     },
     methods: {
       handleFileUpload(event) {
