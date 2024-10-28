@@ -11,12 +11,23 @@
     methods: {
       handleFileUpload(event) {
         const file = event.target.files[0];
+        if (!file) return;
+  
         const reader = new FileReader();
-        reader.onload = () => this.$emit("datasetSelected", JSON.parse(reader.result), false);
+        reader.onload = () => {
+          try {
+            const jsonData = JSON.parse(reader.result);
+            this.$emit("datasetSelected", jsonData, false); // Emit dataset and "isGeneric" flag as false
+          } catch (error) {
+            alert("Error loading JSON file. Please check the file format.");
+            console.error("File load error:", error);
+          }
+        };
         reader.readAsText(file);
       },
       useGenericDataset() {
-        this.$emit("datasetSelected", /* load or reference generic dataset here */ true);
+        // Emit a generic dataset for testing purposes
+        this.$emit("datasetSelected", { /* generic dataset */ }, true);
       }
     }
   };
