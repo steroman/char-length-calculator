@@ -653,23 +653,48 @@ methods: {
     };
     console.log("Final cleanup options after defaulting missing values:", this.cleanupOptions);
   },
+  // handleWidths() {
+  //   const avgCharWidth = calculateAverageWidth(this.characterWidths, this.processedData);
+
+  //   if (!avgCharWidth) {
+  //     alert("Average character width is zero, cannot calculate max length.");
+  //     return;
+  //   }
+
+  //   this.maxLength = Math.floor(this.availableSpace / avgCharWidth);
+  //   this.expandedMaxLength = this.maxLength;
+  //   this.characterSummary = Object.entries(this.processedData).map(([char, data]) => ({
+  //     char,
+  //     frequency: data.frequency,
+  //     count: data.count,
+  //     width: this.characterWidths[char] || 0,
+  //   }));
+  // },
   handleWidths() {
-    const avgCharWidth = calculateAverageWidth(this.characterWidths, this.processedData);
+  console.log("Running handleWidths with the following data:");
+  console.log("Widths:", this.characterWidths);
+  console.log("Processed Data:", this.processedData);
 
-    if (!avgCharWidth) {
-      alert("Average character width is zero, cannot calculate max length.");
-      return;
-    }
+  const avgCharWidth = calculateAverageWidth(this.characterWidths, this.processedData);
 
-    this.maxLength = Math.floor(this.availableSpace / avgCharWidth);
-    this.expandedMaxLength = this.maxLength;
-    this.characterSummary = Object.entries(this.processedData).map(([char, data]) => ({
-      char,
-      frequency: data.frequency,
-      count: data.count,
-      width: this.characterWidths[char] || 0,
-    }));
-  },
+  console.log("Average character width calculated:", avgCharWidth);
+
+  if (!avgCharWidth) {
+    alert("Average character width is zero, cannot calculate max length.");
+    return;
+  }
+
+  this.maxLength = Math.floor(this.availableSpace / avgCharWidth);
+  this.expandedMaxLength = this.maxLength;
+  this.characterSummary = Object.entries(this.processedData).map(([char, data]) => ({
+    char,
+    frequency: data.frequency,
+    count: data.count,
+    width: this.characterWidths[char] || 0,
+  }));
+  console.log("Max Length:", this.maxLength);
+  console.log("Character Summary:", this.characterSummary);
+}
 
 }
 

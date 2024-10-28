@@ -19,6 +19,7 @@
         </tr>
       </tbody>
     </table>
+    <button @click="submitWidths">Confirm Widths</button>
   </div>
 </template>
 
@@ -38,7 +39,6 @@ export default {
   },
   mounted() {
     console.log("Processed data received in CharacterWidthInput:", this.processedData);
-    // Initialize widths with default values, if available
     for (const char of Object.keys(this.processedData)) {
       this.widths[char] = this.getDefaultWidth(char);
     }
@@ -53,15 +53,11 @@ export default {
       }
       return '';
     },
-  },
-  watch: {
-    // Watch for changes in widths and emit to App.vue only when they are fully updated
-    widths: {
-      deep: true,
-      handler(newWidths) {
-        this.$emit("widthsSubmitted", newWidths);
-      },
+    submitWidths() {
+      // Emit only after confirming widths
+      this.$emit("widthsSubmitted", this.widths);
+      console.log("Widths submitted:", this.widths);
     },
-  },
+  }
 };
 </script>
