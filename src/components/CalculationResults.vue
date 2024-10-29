@@ -29,22 +29,12 @@
     </div>
   </div>
 </template>
-
 <script>
 export default {
   props: {
-    maxLength: {
-      type: Number,
-      default: 0,
-    },
-    expandedMaxLength: {
-      type: Number,
-      default: 0,
-    },
-    characterSummary: {
-      type: Array,
-      default: () => [],
-    },
+    maxLength: Number,
+    expandedMaxLength: Number,
+    characterSummary: Array,
   },
 };
 </script>

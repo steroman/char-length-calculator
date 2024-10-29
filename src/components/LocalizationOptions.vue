@@ -41,48 +41,52 @@
 export default {
   data() {
     return {
-      includeLocalization: null, // Tracks user's localization choice
-      option: null, // Tracks dataset choice if localization is enabled
+      includeLocalization: null,
+      option: null,
     };
   },
   methods: {
-    handleFileUpload(event) {
+    async handleFileUpload(event) {
       const file = event.target.files[0];
       const reader = new FileReader();
-      reader.onload = () =>
-        this.$emit("localizationSelected", JSON.parse(reader.result), "own");
+      reader.onload = async () => {
+        try {
+          const localizedData = JSON.parse(reader.result);
+          const avgLocalizedLength = this.calculateAverageLength(localizedData);
+          this.$emit("localizationSelected", { avgLocalizedLength }, "own");
+        } catch (error) {
+          alert("Error reading the file.");
+        }
+      };
       reader.readAsText(file);
     },
     selectGeneric() {
-      this.$emit("localizationSelected", /* provide generic expansion data */ "generic");
+      const genericExpansion = 0.3;
+      this.$emit("localizationSelected", { expansionRate: genericExpansion }, "generic");
+    },
+    calculateAverageLength(data) {
+      const totalLength = Object.values(data).reduce((sum, text) => sum + text.length, 0);
+      return totalLength / Object.values(data).length || 1;
     },
     nextStep() {
       if (this.includeLocalization === "no") {
-        // Skip localization and proceed to results
         this.$emit("localizationSelected", null, "none");
       } else if (this.includeLocalization === "yes" && this.option) {
-        // Proceed only if the user selected either "own" or "generic" dataset
         if (this.option === "own") {
-          // Wait for user to upload a file before emitting
-          if (!this.uploadedFileData) {
-            alert("Please upload your own dataset file to proceed.");
-            return;
-          }
+          alert("Please upload your dataset.");
         } else if (this.option === "generic") {
           this.selectGeneric();
         }
       } else {
-        alert("Please make a complete selection to proceed.");
+        alert("Complete the selection to proceed.");
       }
     },
   },
   watch: {
-    // Watch the includeLocalization option to skip directly if "No" is selected
     includeLocalization(newVal) {
-      if (newVal === "no") {
-        this.nextStep();
-      }
+      if (newVal === "no") this.nextStep();
     },
-  },
+  }
 };
+
 </script>

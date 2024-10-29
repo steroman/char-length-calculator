@@ -48,30 +48,26 @@ export default {
       maxLength: 0,
       expandedMaxLength: 0,
       characterSummary: [],
-      characterWidths: {}
+      characterWidths: {},
+      avgInitialLength: 0,
     };
   },
   methods: {
     handleLocalization(data, type) {
+    console.log("Handling localization:", { data, type });
     if (type === "none") {
-      // Skip localization and proceed directly to results
-      console.log("Localization is not applied.");
-      this.localizationData = null;
-      this.calculateResults();
-      this.step = 6;
-    } else if (type === "own" && data) {
-      console.log("User-provided localization data received:", data);
-      this.localizationData = data;
-      this.calculateResults();
-      this.step = 6;
-    } else if (type === "generic" && data) {
-      console.log("Generic localization expansion applied.");
-      this.localizationData = data;
-      this.calculateResults();
-      this.step = 6;
+      this.expandedMaxLength = this.maxLength; // Set expandedMaxLength directly from maxLength
+      console.log("Localization not applied. Set expandedMaxLength to:", this.expandedMaxLength);
+    } else if (type === "own" && data.avgLocalizedLength) {
+      const expansionRate = (data.avgLocalizedLength - this.avgInitialLength) / this.avgInitialLength;
+      this.applyExpansion(expansionRate);
+    } else if (type === "generic" && data.expansionRate) {
+      this.applyExpansion(data.expansionRate);
     } else {
-      alert("Please complete the localization selection to proceed.");
+      alert("Please complete the localization selection.");
+      return;
     }
+    this.step = 6; // Move to the results step
   },
     goToPreviousStep() {
       if (this.step > 1) {
@@ -88,8 +84,6 @@ export default {
           return;
         }
         break;
-      case 2:
-        break;
       case 3:
         if (!this.availableSpace) {
           alert("Please enter a valid button width.");
@@ -99,94 +93,69 @@ export default {
         break;
       case 4:
         if (!this.validateCharacterWidths()) {
-          alert("Character widths are missing or invalid. Please enter valid widths.");
+          alert("Character widths are missing or invalid.");
           return;
         }
+        this.calculateResults(); // Calculate `maxLength` after widths are validated
         break;
       case 5:
-        // Do nothing for step 5, as the logic is now handled in handleLocalization
-        return;
+        return; // Wait here; step transition will be handled in `handleLocalization`
       default:
         break;
     }
     this.step++;
-    console.log(`Moving to step: ${this.step}`);
   },
-    handleDatasetSelection(dataset, isGeneric) {
+    async handleDatasetSelection(dataset, isGeneric) {
       if (!dataset) {
-        alert("Please select a dataset to continue.");
+        alert("Please select a dataset.");
         return;
       }
       this.dataset = dataset;
       this.isGeneric = isGeneric;
-      console.log("Dataset received:", this.dataset, "Is Generic:", this.isGeneric);
+      this.avgInitialLength = this.calculateAverageLength(this.dataset);
       this.step = 2;
     },
+    calculateAverageLength(data) {
+      const totalLength = Object.values(data).reduce((sum, text) => sum + text.length, 0);
+      return totalLength / Object.values(data).length || 1;
+    },
+    applyExpansion(expansionRate) {
+    this.expandedMaxLength = Math.floor(this.maxLength * (1 + expansionRate));
+    console.log("Applied expansion rate:", expansionRate, "Expanded max length:", this.expandedMaxLength);
+  },
     processData() {
-      console.log("Processing data with cleanup options and dataset.");
       this.processedData = cleanAndCountCharacters(this.dataset, this.cleanupOptions);
-      console.log("Processed data:", this.processedData);
-
-      // Sort processed characters alphabetically
       this.processedData = Object.fromEntries(
         Object.entries(this.processedData).sort(([a], [b]) => a.localeCompare(b))
       );
+      console.log("Processed data for character frequency:", this.processedData);
     },
     handleButtonWidth(width) {
-      console.log("Button width received:", width);
       this.availableSpace = width;
-      if (!this.availableSpace) {
-        console.error("Button width is invalid or not set.");
-      }
     },
     handleCleanupOptions(options) {
-      this.cleanupOptions = {
-        ignoreCapitals: options.ignoreCapitals ?? false,
-        ignorePunctuation: options.ignorePunctuation ?? false,
-        ignoreNumbers: options.ignoreNumbers ?? false,
-      };
-      console.log("Final cleanup options after defaulting missing values:", this.cleanupOptions);
+      this.cleanupOptions = options;
     },
     handleWidths(widths) {
-      console.log("Received widths from CharacterWidthInput:", widths);
-      
-      // Deep clone the widths to ensure Vue reactivity is retained across steps
-      this.characterWidths = JSON.parse(JSON.stringify(widths));
-
-      // Validate if characterWidths retains all keys before moving forward
-      for (const char in this.processedData) {
-        if (!(char in this.characterWidths) || this.characterWidths[char] <= 0) {
-          console.error(`Character ${char} is missing or has invalid width in characterWidths.`);
-        }
-      }
+      this.characterWidths = { ...widths };
     },
     validateCharacterWidths() {
       return Object.values(this.characterWidths).every(width => width > 0);
     },
-    
     calculateResults() {
-      console.log("Calculating results with the following data:");
-      console.log("Character Widths:", this.characterWidths); 
-      console.log("Processed Data:", this.processedData);
+    console.log("Calculating results...");
+    const avgCharWidth = calculateAverageWidth(this.characterWidths, this.processedData);
 
-      const avgCharWidth = calculateAverageWidth(this.characterWidths, this.processedData);
-
-      if (!avgCharWidth) {
-        alert("Average character width is zero, cannot calculate max length.");
-        return;
-      }
-
-      this.maxLength = Math.floor(this.availableSpace / avgCharWidth);
-      this.expandedMaxLength = this.maxLength;
-      this.characterSummary = Object.entries(this.processedData).map(([char, data]) => ({
-        char,
-        frequency: data.frequency,
-        count: data.count,
-        width: this.characterWidths[char] || 0,
-      }));
-      console.log("Final Max Length:", this.maxLength);
-      console.log("Character Summary:", this.characterSummary);
+    if (!avgCharWidth) {
+      alert("Average character width is zero, cannot calculate max length.");
+      return;
     }
-  }
+
+    this.maxLength = Math.floor(this.availableSpace / avgCharWidth);
+    this.expandedMaxLength = this.maxLength; // Set initial expandedMaxLength
+    console.log("Calculated maxLength:", this.maxLength);
+  },
+  },
 };
+
 </script>
