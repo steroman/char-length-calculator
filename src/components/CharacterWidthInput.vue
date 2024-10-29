@@ -15,11 +15,13 @@
           <td>{{ char }}</td>
           <td>{{ data.count }}</td>
           <td>{{ data.frequency ? (data.frequency * 100).toFixed(2) : 0 }}%</td>
-          <td><input type="number" v-model.number="widths[char]" :placeholder="getDefaultWidth(char)" /></td>
+          <td>
+            <input type="number" v-model.number="widths[char]" :placeholder="getDefaultWidth(char)" />
+          </td>
         </tr>
       </tbody>
     </table>
-    <button @click="submitWidths">Confirm Widths</button>
+    <button @click="submitWidths">Submit Widths</button>
   </div>
 </template>
 
@@ -40,8 +42,10 @@ export default {
   mounted() {
     console.log("Processed data received in CharacterWidthInput:", this.processedData);
     for (const char of Object.keys(this.processedData)) {
-      this.widths[char] = this.getDefaultWidth(char);
+      this.widths[char] = this.getDefaultWidth(char); // Directly assign to widths
+      console.log(`Setting default width for ${char}: ${this.getDefaultWidth(char)}`);
     }
+    console.log("Widths initialized:", this.widths);
   },
   methods: {
     getDefaultWidth(char) {
@@ -54,10 +58,9 @@ export default {
       return '';
     },
     submitWidths() {
-      // Emit only after confirming widths
-      this.$emit("widthsSubmitted", this.widths);
-      console.log("Widths submitted:", this.widths);
+      console.log("Submitting widths with the following data:", this.widths);
+      this.$emit("widthsSubmitted", JSON.parse(JSON.stringify(this.widths))); // Emit a deep copy to avoid reactivity issues
     },
-  }
+  },
 };
-</script>
+</script> 
