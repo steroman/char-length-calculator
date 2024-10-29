@@ -34,74 +34,89 @@ export default {
     CalculationResults,
   },
   data() {
-  return {
-    step: 1,
-    dataset: null,
-    isGeneric: null,
-    cleanupOptions: {
-      ignoreCapitals: false,
-      ignorePunctuation: false,
-      ignoreNumbers: false,
-    },
-    processedData: {},
-    availableSpace: null,
-    maxLength: 0,
-    expandedMaxLength: 0,
-    characterSummary: [],
-    characterWidths: {}
-  };
-},
-methods: {
-  goToNextStep() {
-      console.log(`Current step: ${this.step}`);
-
-      switch (this.step) {
-        case 1:
-          if (!this.dataset) {
-            alert("Please select a dataset.");
-            return;
-          }
-          console.log("Dataset selected:", this.dataset);
-          break;
-        case 2:
-          console.log("Cleanup options set:", this.cleanupOptions);
-          break;
-        case 3:
-          console.log("Button width (availableSpace):", this.availableSpace);
-          if (!this.availableSpace) {
-            alert("Please enter a valid button width.");
-            return;
-          }
-          this.processData(); // Process data after button width is provided
-          break;
-        case 4:
-          console.log("Character widths before validation:", this.characterWidths);
-          if (!this.validateCharacterWidths()) {
-            alert("Character widths are missing or invalid. Please enter valid widths.");
-            return;
-          }
-          this.calculateResults();
-          break;
-        case 5:
-          this.handleLocalization();
-          break;
-        default:
-          break;
+    return {
+      step: 1,
+      dataset: null,
+      isGeneric: false,
+      cleanupOptions: {
+        ignoreCapitals: false,
+        ignorePunctuation: false,
+        ignoreNumbers: false,
+      },
+      processedData: {},
+      availableSpace: null,
+      maxLength: 0,
+      expandedMaxLength: 0,
+      characterSummary: [],
+      characterWidths: {}
+    };
+  },
+  methods: {
+    handleLocalization(data, type) {
+    if (type === "none") {
+      console.log("Localization is not applied.");
+      this.localizationData = null;
+    } else if (type === "own") {
+      console.log("User-provided localization data received:", data);
+      this.localizationData = data;
+    } else if (type === "generic") {
+      console.log("Generic localization expansion applied.");
+      this.localizationData = data; // Assume generic expansion data is provided
+    }
+    this.step = 6; // Move to the final step after localization selection
+  },
+    goToPreviousStep() {
+      if (this.step > 1) {
+        this.step--;
+        console.log(`Moving to step: ${this.step}`);
       }
-      this.step++;
-      console.log(`Moving to step: ${this.step}`);
     },
-  handleDatasetSelection(dataset, isGeneric) {
+    goToNextStep() {
+  console.log(`Current step: ${this.step}`);
+
+  switch (this.step) {
+    case 1:
+      if (!this.dataset) {
+        alert("Please select a dataset.");
+        return;
+      }
+      break;
+    case 2:
+      break;
+    case 3:
+      if (!this.availableSpace) {
+        alert("Please enter a valid button width.");
+        return;
+      }
+      this.processData();  // Process data after button width is provided
+      break;
+    case 4:
+      if (!this.validateCharacterWidths()) {
+        alert("Character widths are missing or invalid. Please enter valid widths.");
+        return;
+      }
+      break;
+    case 5:
+      this.calculateResults();
+      break;
+    default:
+      break;
+  }
+  
+  this.step++;
+  console.log(`Moving to step: ${this.step}`);
+},
+    handleDatasetSelection(dataset, isGeneric) {
       if (!dataset) {
         alert("Please select a dataset to continue.");
         return;
       }
       this.dataset = dataset;
-      this.isGeneric = isGeneric; // Store whether the dataset is generic
+      this.isGeneric = isGeneric;
       console.log("Dataset received:", this.dataset, "Is Generic:", this.isGeneric);
-      this.step = 2; // Move to the next step after dataset is set
+      this.step = 2;
     },
-  processData() {
+    processData() {
       console.log("Processing data with cleanup options and dataset.");
       this.processedData = cleanAndCountCharacters(this.dataset, this.cleanupOptions);
       console.log("Processed data:", this.processedData);
@@ -111,10 +126,44 @@ methods: {
         Object.entries(this.processedData).sort(([a], [b]) => a.localeCompare(b))
       );
     },
-  calculateResults() {
-      console.log("Calculating results...");
+    handleButtonWidth(width) {
+      console.log("Button width received:", width);
+      this.availableSpace = width;
+      if (!this.availableSpace) {
+        console.error("Button width is invalid or not set.");
+      }
+    },
+    handleCleanupOptions(options) {
+      this.cleanupOptions = {
+        ignoreCapitals: options.ignoreCapitals ?? false,
+        ignorePunctuation: options.ignorePunctuation ?? false,
+        ignoreNumbers: options.ignoreNumbers ?? false,
+      };
+      console.log("Final cleanup options after defaulting missing values:", this.cleanupOptions);
+    },
+    handleWidths(widths) {
+      console.log("Received widths from CharacterWidthInput:", widths);
+      
+      // Deep clone the widths to ensure Vue reactivity is retained across steps
+      this.characterWidths = JSON.parse(JSON.stringify(widths));
+
+      // Validate if characterWidths retains all keys before moving forward
+      for (const char in this.processedData) {
+        if (!(char in this.characterWidths) || this.characterWidths[char] <= 0) {
+          console.error(`Character ${char} is missing or has invalid width in characterWidths.`);
+        }
+      }
+    },
+    validateCharacterWidths() {
+      return Object.values(this.characterWidths).every(width => width > 0);
+    },
+    
+    calculateResults() {
+      console.log("Calculating results with the following data:");
+      console.log("Character Widths:", this.characterWidths); 
+      console.log("Processed Data:", this.processedData);
+
       const avgCharWidth = calculateAverageWidth(this.characterWidths, this.processedData);
-      console.log("Average character width calculated:", avgCharWidth);
 
       if (!avgCharWidth) {
         alert("Average character width is zero, cannot calculate max length.");
@@ -129,10 +178,9 @@ methods: {
         count: data.count,
         width: this.characterWidths[char] || 0,
       }));
-    },
-    handleLocalization() {
-      console.log("Localization options handled.");
-    },
-}
-}
+      console.log("Final Max Length:", this.maxLength);
+      console.log("Character Summary:", this.characterSummary);
+    }
+  }
+};
 </script>
