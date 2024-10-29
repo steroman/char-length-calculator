@@ -54,16 +54,24 @@ export default {
   methods: {
     handleLocalization(data, type) {
     if (type === "none") {
+      // Skip localization and proceed directly to results
       console.log("Localization is not applied.");
       this.localizationData = null;
-    } else if (type === "own") {
+      this.calculateResults();
+      this.step = 6;
+    } else if (type === "own" && data) {
       console.log("User-provided localization data received:", data);
       this.localizationData = data;
-    } else if (type === "generic") {
+      this.calculateResults();
+      this.step = 6;
+    } else if (type === "generic" && data) {
       console.log("Generic localization expansion applied.");
-      this.localizationData = data; // Assume generic expansion data is provided
+      this.localizationData = data;
+      this.calculateResults();
+      this.step = 6;
+    } else {
+      alert("Please complete the localization selection to proceed.");
     }
-    this.step = 6; // Move to the final step after localization selection
   },
     goToPreviousStep() {
       if (this.step > 1) {
@@ -72,40 +80,38 @@ export default {
       }
     },
     goToNextStep() {
-  console.log(`Current step: ${this.step}`);
-
-  switch (this.step) {
-    case 1:
-      if (!this.dataset) {
-        alert("Please select a dataset.");
+    console.log(`Current step: ${this.step}`);
+    switch (this.step) {
+      case 1:
+        if (!this.dataset) {
+          alert("Please select a dataset.");
+          return;
+        }
+        break;
+      case 2:
+        break;
+      case 3:
+        if (!this.availableSpace) {
+          alert("Please enter a valid button width.");
+          return;
+        }
+        this.processData(); // Process data after button width is provided
+        break;
+      case 4:
+        if (!this.validateCharacterWidths()) {
+          alert("Character widths are missing or invalid. Please enter valid widths.");
+          return;
+        }
+        break;
+      case 5:
+        // Do nothing for step 5, as the logic is now handled in handleLocalization
         return;
-      }
-      break;
-    case 2:
-      break;
-    case 3:
-      if (!this.availableSpace) {
-        alert("Please enter a valid button width.");
-        return;
-      }
-      this.processData();  // Process data after button width is provided
-      break;
-    case 4:
-      if (!this.validateCharacterWidths()) {
-        alert("Character widths are missing or invalid. Please enter valid widths.");
-        return;
-      }
-      break;
-    case 5:
-      this.calculateResults();
-      break;
-    default:
-      break;
-  }
-  
-  this.step++;
-  console.log(`Moving to step: ${this.step}`);
-},
+      default:
+        break;
+    }
+    this.step++;
+    console.log(`Moving to step: ${this.step}`);
+  },
     handleDatasetSelection(dataset, isGeneric) {
       if (!dataset) {
         alert("Please select a dataset to continue.");
