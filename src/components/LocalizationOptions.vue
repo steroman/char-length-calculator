@@ -11,82 +11,82 @@
       No
     </label>
 
-    <!-- Show dataset options only if the user selects 'yes' -->
+    <!-- Show dataset options if the user selects 'yes' -->
     <div v-if="includeLocalization === 'yes'">
-      <p>Select a localization dataset:</p>
-      <label>
-        <input type="radio" v-model="option" value="own" />
-        Use Own Dataset
-      </label>
-      <label>
-        <input type="radio" v-model="option" value="generic" />
-        Use Generic Dataset
-      </label>
+      <button @click="addLanguageUpload">Add Language Upload</button>
 
-      <!-- Input for uploading a custom dataset -->
-      <input
-        v-if="option === 'own'"
-        type="file"
-        @change="handleFileUpload"
-        accept=".json"
-      />
-
-      <!-- Button to select the generic dataset -->
-      <button v-if="option === 'generic'" @click="selectGeneric">Select Generic Expansion</button>
+      <div v-for="(language, index) in languages" :key="index" class="language-upload">
+        <p>Select a language and upload the dataset:</p>
+        <select v-model="language.selectedLanguage" :key="`language-${index}`">
+          <option value="" disabled>Select a language</option>
+          <option v-for="lang in languageList" :value="lang.code" :key="lang.code">{{ lang.name }}</option>
+        </select>
+        <input
+          type="file"
+          @change="event => handleFileUpload(event, index)"
+          accept=".json"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+import { languageList } from '../utils/languageList.js';
+
 export default {
   data() {
     return {
       includeLocalization: null,
-      option: null,
+      languages: [],
+      languageList: languageList,
     };
   },
   methods: {
-    async handleFileUpload(event) {
+    addLanguageUpload() {
+      this.languages.push({ selectedLanguage: '', file: null, avgLocalizedLength: null });
+    },
+    handleFileUpload(event, index) {
       const file = event.target.files[0];
       const reader = new FileReader();
-      reader.onload = async () => {
+      reader.onload = () => {
         try {
           const localizedData = JSON.parse(reader.result);
           const avgLocalizedLength = this.calculateAverageLength(localizedData);
-          this.$emit("localizationSelected", { avgLocalizedLength }, "own");
+          this.languages[index] = {
+            ...this.languages[index],
+            file: localizedData,
+            avgLocalizedLength,
+          };
+          this.emitLanguages();
         } catch (error) {
-          alert("Error reading the file.");
+          alert('Error reading the file. Please ensure it’s a valid JSON file.');
+          console.error('File read error:', error);
         }
       };
       reader.readAsText(file);
     },
-    selectGeneric() {
-      const genericExpansion = 0.3;
-      this.$emit("localizationSelected", { expansionRate: genericExpansion }, "generic");
-    },
     calculateAverageLength(data) {
       const totalLength = Object.values(data).reduce((sum, text) => sum + text.length, 0);
-      return totalLength / Object.values(data).length || 1;
+      return totalLength / Object.values(data).length;
     },
-    nextStep() {
-      if (this.includeLocalization === "no") {
-        this.$emit("localizationSelected", null, "none");
-      } else if (this.includeLocalization === "yes" && this.option) {
-        if (this.option === "own") {
-          alert("Please upload your dataset.");
-        } else if (this.option === "generic") {
-          this.selectGeneric();
-        }
-      } else {
-        alert("Complete the selection to proceed.");
-      }
+    emitLanguages() {
+      // Prepare data for each uploaded language and emit
+      const languagesData = this.languages
+        .filter(language => language.file && language.selectedLanguage)
+        .map(language => ({
+          code: language.selectedLanguage,
+          avgLocalizedLength: language.avgLocalizedLength,
+        }));
+      this.$emit('localizationSelected', languagesData, 'multi');
     },
   },
   watch: {
     includeLocalization(newVal) {
-      if (newVal === "no") this.nextStep();
+      if (newVal === 'no') {
+        this.$emit('localizationSelected', null, 'none');
+      }
     },
-  }
+  },
 };
-
 </script>

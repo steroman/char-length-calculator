@@ -56,15 +56,23 @@ export default {
     handleLocalization(data, type) {
     console.log("Handling localization:", { data, type });
     if (type === "none") {
-      // Set expandedMaxLength directly to maxLength if no localization is applied
       this.expandedMaxLength = this.maxLength;
-      console.log("Localization not applied. Set expandedMaxLength to:", this.expandedMaxLength);
-    } else if (type === "own" && data.avgLocalizedLength) {
-      // Calculate expansion rate based on the provided dataset
-      const expansionRate = (data.avgLocalizedLength - this.avgInitialLength) / this.avgInitialLength;
-      this.applyExpansion(expansionRate);  // Adjust expanded max length for localization
-    } else if (type === "generic" && data.expansionRate) {
-      this.applyExpansion(data.expansionRate);
+    } else if (type === "multi" && Array.isArray(data)) {
+      // Calculate expansion rate for each language
+      const expansionRates = data.map(lang => {
+        const expansionRate = (lang.avgLocalizedLength - this.avgInitialLength) / this.avgInitialLength;
+        return { code: lang.code, expansionRate };
+      });
+
+      // Find the highest expansion rate
+      const maxExpansionRate = Math.max(...expansionRates.map(lang => lang.expansionRate));
+      console.log("Max expansion rate found:", maxExpansionRate);
+
+      // Apply the maximum expansion rate
+      this.applyExpansion(maxExpansionRate);
+
+      // Optionally, sort expansionRates by highest to lowest for later use in results
+      this.sortedExpansionRates = expansionRates.sort((a, b) => b.expansionRate - a.expansionRate);
     } else {
       alert("Please complete the localization selection.");
       return;
@@ -122,7 +130,6 @@ export default {
       return totalLength / Object.values(data).length || 1;
     },
     applyExpansion(expansionRate) {
-    // Calculate the adjusted character limit to account for expansion
     this.expandedMaxLength = Math.floor(this.maxLength / (1 + expansionRate));
     console.log("Applied expansion rate:", expansionRate, "Adjusted expanded max length:", this.expandedMaxLength);
   },
