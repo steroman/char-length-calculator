@@ -56,11 +56,13 @@ export default {
     handleLocalization(data, type) {
     console.log("Handling localization:", { data, type });
     if (type === "none") {
-      this.expandedMaxLength = this.maxLength; // Set expandedMaxLength directly from maxLength
+      // Set expandedMaxLength directly to maxLength if no localization is applied
+      this.expandedMaxLength = this.maxLength;
       console.log("Localization not applied. Set expandedMaxLength to:", this.expandedMaxLength);
     } else if (type === "own" && data.avgLocalizedLength) {
+      // Calculate expansion rate based on the provided dataset
       const expansionRate = (data.avgLocalizedLength - this.avgInitialLength) / this.avgInitialLength;
-      this.applyExpansion(expansionRate);
+      this.applyExpansion(expansionRate);  // Adjust expanded max length for localization
     } else if (type === "generic" && data.expansionRate) {
       this.applyExpansion(data.expansionRate);
     } else {
@@ -120,8 +122,9 @@ export default {
       return totalLength / Object.values(data).length || 1;
     },
     applyExpansion(expansionRate) {
-    this.expandedMaxLength = Math.floor(this.maxLength * (1 + expansionRate));
-    console.log("Applied expansion rate:", expansionRate, "Expanded max length:", this.expandedMaxLength);
+    // Calculate the adjusted character limit to account for expansion
+    this.expandedMaxLength = Math.floor(this.maxLength / (1 + expansionRate));
+    console.log("Applied expansion rate:", expansionRate, "Adjusted expanded max length:", this.expandedMaxLength);
   },
     processData() {
       this.processedData = cleanAndCountCharacters(this.dataset, this.cleanupOptions);
