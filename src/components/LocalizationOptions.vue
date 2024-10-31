@@ -44,9 +44,11 @@ export default {
   },
   methods: {
     addLanguageUpload() {
+      // Adds a new language option for the user to upload
       this.languages.push({ selectedLanguage: '', file: null, avgLocalizedLength: null });
     },
     handleFileUpload(event, index) {
+      // Reads and parses the uploaded JSON file to calculate average text length
       const file = event.target.files[0];
       const reader = new FileReader();
       reader.onload = () => {
@@ -58,7 +60,7 @@ export default {
             file: localizedData,
             avgLocalizedLength,
           };
-          this.emitLanguages();
+          this.emitLanguages(); // Emit data after successful upload
         } catch (error) {
           alert('Error reading the file. Please ensure it’s a valid JSON file.');
           console.error('File read error:', error);
@@ -71,18 +73,22 @@ export default {
       return totalLength / Object.values(data).length;
     },
     emitLanguages() {
-      // Prepare data for each uploaded language and emit
-      const languagesData = this.languages
-        .filter(language => language.file && language.selectedLanguage)
-        .map(language => ({
+      // Prepare data for emitting, only emit when all required fields are complete
+      const validLanguages = this.languages.filter(language => language.file && language.selectedLanguage);
+      if (validLanguages.length === this.languages.length) {
+        const languagesData = validLanguages.map(language => ({
           code: language.selectedLanguage,
           avgLocalizedLength: language.avgLocalizedLength,
         }));
-      this.$emit('localizationSelected', languagesData, 'multi');
+        this.$emit('localizationSelected', languagesData, 'multi');
+      } else {
+        console.log("Waiting for all language data to be completed before emitting.");
+      }
     },
   },
   watch: {
     includeLocalization(newVal) {
+      // Emit immediately if "No" is selected
       if (newVal === 'no') {
         this.$emit('localizationSelected', null, 'none');
       }
