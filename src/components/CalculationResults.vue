@@ -26,15 +26,35 @@
           </tr>
         </tbody>
       </table>
+
+      <h3>Localization Expansion Rates:</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Language</th>
+            <th>Average Length</th>
+            <th>Expansion Rate (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(item, index) in sortedExpansionRates" :key="index">
+            <td>{{ item.code }}</td>
+            <td>{{ item.avgLocalizedLength.toFixed(2) }}</td>
+            <td>{{ (item.expansionRate * 100).toFixed(2) }}%</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>
+
 <script>
 export default {
   props: {
     maxLength: Number,
     expandedMaxLength: Number,
     characterSummary: Array,
+    sortedExpansionRates: Array,
   },
 };
 </script>

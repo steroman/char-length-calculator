@@ -11,7 +11,6 @@
       No
     </label>
 
-    <!-- Show dataset options if the user selects 'yes' -->
     <div v-if="includeLocalization === 'yes'">
       <button @click="addLanguageUpload">Add Language Upload</button>
 
@@ -39,16 +38,14 @@ export default {
     return {
       includeLocalization: null,
       languages: [],
-      languageList: languageList,
+      languageList,
     };
   },
   methods: {
     addLanguageUpload() {
-      // Adds a new language option for the user to upload
-      this.languages.push({ selectedLanguage: '', file: null, avgLocalizedLength: null });
+      this.languages.push({ selectedLanguage: '', avgLocalizedLength: null });
     },
     handleFileUpload(event, index) {
-      // Reads and parses the uploaded JSON file to calculate average text length
       const file = event.target.files[0];
       const reader = new FileReader();
       reader.onload = () => {
@@ -57,38 +54,36 @@ export default {
           const avgLocalizedLength = this.calculateAverageLength(localizedData);
           this.languages[index] = {
             ...this.languages[index],
-            file: localizedData,
             avgLocalizedLength,
           };
-          this.emitLanguages(); // Emit data after successful upload
+          // No call to emit here; data will be emitted when user clicks Next
+          console.log(`Data for language ${this.languages[index].selectedLanguage} uploaded.`);
         } catch (error) {
           alert('Error reading the file. Please ensure it’s a valid JSON file.');
-          console.error('File read error:', error);
         }
       };
       reader.readAsText(file);
     },
     calculateAverageLength(data) {
       const totalLength = Object.values(data).reduce((sum, text) => sum + text.length, 0);
-      return totalLength / Object.values(data).length;
+      return totalLength / Object.values(data).length || 1;
     },
-    emitLanguages() {
-      // Prepare data for emitting, only emit when all required fields are complete
-      const validLanguages = this.languages.filter(language => language.file && language.selectedLanguage);
-      if (validLanguages.length === this.languages.length) {
-        const languagesData = validLanguages.map(language => ({
+    finalizeLocalization() {
+      // Check if all selected languages have valid avgLocalizedLength data before emitting
+      const completeLanguages = this.languages.filter(lang => lang.avgLocalizedLength && lang.selectedLanguage);
+      if (completeLanguages.length === this.languages.length) {
+        const languagesData = completeLanguages.map(language => ({
           code: language.selectedLanguage,
           avgLocalizedLength: language.avgLocalizedLength,
         }));
         this.$emit('localizationSelected', languagesData, 'multi');
       } else {
-        console.log("Waiting for all language data to be completed before emitting.");
+        alert("Please complete all language selections and file uploads.");
       }
     },
   },
   watch: {
     includeLocalization(newVal) {
-      // Emit immediately if "No" is selected
       if (newVal === 'no') {
         this.$emit('localizationSelected', null, 'none');
       }

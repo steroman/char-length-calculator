@@ -8,11 +8,12 @@
       :processedData="sortedProcessedData"
       v-if="step === 4"
     />
-    <LocalizationOptions @localizationSelected="handleLocalization" v-if="step === 5" />
+    <LocalizationOptions ref="localizationOptions" @localizationSelected="handleLocalization" v-if="step === 5" />
     <CalculationResults
       :maxLength="maxLength"
       :expandedMaxLength="expandedMaxLength"
       :characterSummary="sortedCharacterSummary"
+      :sortedExpansionRates="sortedExpansionRates"
       v-if="step === 6"
     />
 
@@ -59,6 +60,7 @@ export default {
       characterWidths: {},
       avgInitialLength: 0,
       localizationData: null,
+      sortedExpansionRates: [],
     };
   },
   computed: {
@@ -95,21 +97,17 @@ export default {
     handleWidths(widths) {
       this.characterWidths = { ...widths };
       console.log("Character widths received and assigned:", this.characterWidths);
-      // Confirm width values to avoid 0 entries in the final display
       this.processData();
     },
     processData() {
       this.processedData = cleanAndCountCharacters(this.dataset, this.cleanupOptions);
       console.log("Processed data with frequencies:", this.processedData);
 
-      // Log `characterWidths` to confirm it is fully populated before generating `characterSummary`
-      console.log("Using character widths to populate character summary:", this.characterWidths);
-
       this.characterSummary = Object.entries(this.processedData).map(([char, data]) => ({
         char,
         frequency: data.frequency,
         count: data.count,
-        width: this.characterWidths[char] || 0, // Fetch width for each character
+        width: this.characterWidths[char] || 0,
       }));
       console.log("Character summary prepared:", this.characterSummary);
     },
@@ -123,7 +121,7 @@ export default {
       }
 
       this.maxLength = Math.floor(this.availableSpace / avgCharWidth);
-      this.expandedMaxLength = this.maxLength; // Set initial expandedMaxLength
+      this.expandedMaxLength = this.maxLength;
       console.log("Calculated maxLength:", this.maxLength);
     },
     handleLocalization(data, type) {
@@ -141,10 +139,13 @@ export default {
 
       const expansionRates = this.localizationData.map(lang => {
         const expansionRate = (lang.avgLocalizedLength - this.avgInitialLength) / this.avgInitialLength;
-        return expansionRate;
+        return { code: lang.code, avgLocalizedLength: lang.avgLocalizedLength, expansionRate };
       });
-      const maxExpansionRate = Math.max(...expansionRates);
+
+      const maxExpansionRate = Math.max(...expansionRates.map(lang => lang.expansionRate));
       this.applyExpansion(maxExpansionRate);
+
+      this.sortedExpansionRates = expansionRates.sort((a, b) => b.expansionRate - a.expansionRate);
     },
     applyExpansion(expansionRate) {
       this.expandedMaxLength = Math.floor(this.maxLength / (1 + expansionRate));
@@ -157,24 +158,30 @@ export default {
       }
     },
     goToNextStep() {
-      console.log(`Current step: ${this.step}`);
-      switch (this.step) {
-        case 1:
-          if (!this.dataset) return alert("Please select a dataset.");
-          break;
-        case 3:
-          if (!this.availableSpace) return alert("Please enter a valid button width.");
-          this.processData();
-          break;
-        case 4:
-          if (!this.validateCharacterWidths()) return alert("Character widths are missing or invalid.");
-          this.calculateResults();
-          break;
-        case 5:
-          return; // Wait for localization handling
+  console.log(`Current step: ${this.step}`);
+  switch (this.step) {
+    case 1:
+      if (!this.dataset) return alert("Please select a dataset.");
+      break;
+    case 3:
+      if (!this.availableSpace) return alert("Please enter a valid button width.");
+      this.processData();
+      break;
+    case 4:
+      if (!this.validateCharacterWidths()) return alert("Character widths are missing or invalid.");
+      this.calculateResults();
+      break;
+    case 5:
+      if (this.$refs.localizationOptions) {
+        // Call finalizeLocalization from LocalizationOptions component
+        this.$refs.localizationOptions.finalizeLocalization();
       }
-      this.step++;
-    },
+      return; // Prevent automatic advancement on step 5
+    default:
+      break;
+  }
+  this.step++;
+},
     validateCharacterWidths() {
       return Object.values(this.characterWidths).every(width => width > 0);
     },
